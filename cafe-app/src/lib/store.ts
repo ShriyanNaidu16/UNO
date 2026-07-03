@@ -1,10 +1,11 @@
-import { MenuItem, MenuCategory, Order, OrderItem } from './types';
+import { MenuItem, MenuCategory, Order, OrderItem, Bill } from './types';
 
 // Global memory store for local testing across Next.js API route calls
 type Store = {
   categories: MenuCategory[];
   items: MenuItem[];
   orders: (Order & { table_number: number, items: (OrderItem & { menu_item_name: string })[] })[];
+  bills: Bill[];
 };
 
 // Use a global variable to persist state in Next.js development server
@@ -32,6 +33,37 @@ if (!global.__CAFE_STORE__) {
     categories: initialCategories,
     items: initialItems,
     orders: [],
+    bills: [
+      // Add a mock bill to ensure the dashboard has data today
+      {
+        id: 'mock-bill-1',
+        table_id: 'table-12',
+        subtotal: 500,
+        gst_amount: 25,
+        service_charge_amount: 25,
+        total_amount: 550,
+        razorpay_order_id: null,
+        razorpay_payment_id: null,
+        payment_status: 'paid',
+        payment_method: 'upi',
+        payment_date: new Date().toISOString(),
+        created_at: new Date().toISOString()
+      },
+      {
+        id: 'mock-bill-2',
+        table_id: 'table-10',
+        subtotal: 800,
+        gst_amount: 40,
+        service_charge_amount: 40,
+        total_amount: 880,
+        razorpay_order_id: null,
+        razorpay_payment_id: null,
+        payment_status: 'paid',
+        payment_method: 'cash',
+        payment_date: new Date().toISOString(),
+        created_at: new Date().toISOString()
+      }
+    ],
   };
 }
 

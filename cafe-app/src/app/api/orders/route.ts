@@ -17,7 +17,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const { tableId, tableNumber, items } = await request.json();
+  const { tableId, tableNumber, items, customerName } = await request.json();
 
   const newOrderId = `o${Date.now()}`;
   
@@ -29,6 +29,7 @@ export async function POST(request: Request) {
     id: newOrderId,
     table_id: tableId,
     table_number: tableNumber || 12,
+    customer_name: customerName || null,
     status: 'placed',
     round_number: nextRound,
     created_at: new Date().toISOString(),

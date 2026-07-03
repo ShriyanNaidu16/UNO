@@ -32,6 +32,7 @@ CREATE TABLE menu_items (
 CREATE TABLE orders (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     table_id UUID REFERENCES tables(id),
+    customer_name TEXT,
     status TEXT NOT NULL DEFAULT 'placed' CHECK (status IN ('placed', 'accepted', 'preparing', 'ready', 'served', 'billed', 'paid', 'closed')),
     round_number INT NOT NULL DEFAULT 1,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -59,6 +60,8 @@ CREATE TABLE bills (
     razorpay_order_id TEXT,
     razorpay_payment_id TEXT,
     payment_status TEXT NOT NULL DEFAULT 'pending' CHECK (payment_status IN ('pending', 'paid', 'failed')),
+    payment_method TEXT CHECK (payment_method IN ('upi', 'card', 'cash')),
+    payment_date TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

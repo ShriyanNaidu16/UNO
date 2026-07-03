@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import QRCode from 'qrcode';
+import RevenueDashboard from './RevenueDashboard';
 
 export default function AdminPage() {
   const [tableNumber, setTableNumber] = useState('');
@@ -76,6 +77,8 @@ export default function AdminPage() {
           </div>
         )}
       </div>
+
+      <RevenueDashboard />
     </div>
   );
 }

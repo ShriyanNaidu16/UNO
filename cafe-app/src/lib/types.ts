@@ -28,6 +28,7 @@ export type MenuItem = {
 export type Order = {
   id: string;
   table_id: string;
+  customer_name: string | null;
   status: 'placed' | 'accepted' | 'preparing' | 'ready' | 'served' | 'billed' | 'paid' | 'closed';
   round_number: number;
   created_at: string;
@@ -53,5 +54,7 @@ export type Bill = {
   razorpay_order_id: string | null;
   razorpay_payment_id: string | null;
   payment_status: 'pending' | 'paid' | 'failed';
+  payment_method: 'upi' | 'card' | 'cash' | null;
+  payment_date: string | null;
   created_at: string;
 };

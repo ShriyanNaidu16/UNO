@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Receipt, CreditCard, Download, Star } from 'lucide-react';
 import jsPDF from 'jspdf';
@@ -14,10 +14,34 @@ export default function CheckoutClient() {
   const [rating, setRating] = useState<number>(0);
   const [comment, setComment] = useState('');
   const [isReviewSubmitted, setIsReviewSubmitted] = useState(false);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Mock calculation
-  const subtotal = 650; // Mock subtotal
-  const gst = subtotal * 0.05; // Assuming 5% GST
+  useEffect(() => {
+    if (!tableId) return;
+    const fetchOrders = async () => {
+      try {
+        const res = await fetch(`/api/orders?table=${tableId}`);
+        const data = await res.json();
+        setOrders(data.orders || []);
+      } catch (err) {
+        console.error("Failed to fetch orders for checkout", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchOrders();
+  }, [tableId]);
+
+  // Calculate actual total
+  const activeOrders = orders.filter(o => o.status !== 'closed' && o.status !== 'paid');
+  const subtotal = activeOrders.reduce((sum, order) => {
+    return sum + order.items.reduce((itemSum: number, item: any) => {
+      return itemSum + (item.price_at_order_time * item.quantity);
+    }, 0);
+  }, 0);
+  
+  const gst = subtotal * 0.05; // 5% GST
   const serviceCharge = subtotal * 0.05; // 5% optional service charge
   const total = subtotal + gst + serviceCharge;
 
@@ -40,25 +64,34 @@ export default function CheckoutClient() {
     doc.line(20, 55, 190, 55);
     
     doc.text("Items:", 20, 65);
-    doc.text("2x Espresso", 20, 75);
-    doc.text("1x Chicken Sandwich", 20, 85);
+    let yPos = 75;
+    activeOrders.forEach(order => {
+      order.items.forEach((item: any) => {
+        doc.text(`${item.quantity}x ${item.menu_item_name}`, 20, yPos);
+        yPos += 10;
+      });
+    });
     
-    doc.line(20, 95, 190, 95);
+    doc.line(20, yPos, 190, yPos);
     
-    doc.text(`Subtotal: Rs. ${subtotal.toFixed(2)}`, 20, 105);
-    doc.text(`GST (5%): Rs. ${gst.toFixed(2)}`, 20, 115);
-    doc.text(`Service Charge (5%): Rs. ${serviceCharge.toFixed(2)}`, 20, 125);
+    doc.text(`Subtotal: Rs. ${subtotal.toFixed(2)}`, 20, yPos + 10);
+    doc.text(`GST (5%): Rs. ${gst.toFixed(2)}`, 20, yPos + 20);
+    doc.text(`Service Charge (5%): Rs. ${serviceCharge.toFixed(2)}`, 20, yPos + 30);
     
     doc.setFont('helvetica', 'bold');
-    doc.text(`Total: Rs. ${total.toFixed(2)}`, 20, 135);
+    doc.text(`Total: Rs. ${total.toFixed(2)}`, 20, yPos + 40);
     doc.setFont('helvetica', 'normal');
     
-    doc.text("Thank you for dining with us!", 20, 155);
+    doc.text("Thank you for dining with us!", 20, yPos + 60);
     
     doc.save(`receipt-table-${tableId}.pdf`);
   };
 
   if (!tableId) return <div className="p-8 text-center text-red-500">Invalid Table</div>;
+  if (isLoading) return <div className="p-8 text-center">Loading bill...</div>;
+  if (activeOrders.length === 0 && paymentStatus !== 'success') {
+    return <div className="p-8 text-center text-foreground/70">No active orders found for this table.</div>;
+  }
 
   if (paymentStatus === 'success') {
     return (

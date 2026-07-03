@@ -18,6 +18,7 @@ export default function MenuClient() {
   const [cart, setCart] = useState<{ item: MenuItem; quantity: number }[]>([]);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [isCartViewOpen, setIsCartViewOpen] = useState(false);
+  const [customerName, setCustomerName] = useState('');
   
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [items, setItems] = useState<MenuItem[]>([]);
@@ -83,12 +84,23 @@ export default function MenuClient() {
 
   const placeOrder = async () => {
     if (!tableId || cart.length === 0) return;
+    
+    if (!customerName.trim()) {
+      alert('Please enter your name before placing the order.');
+      return;
+    }
+
     setIsPlacingOrder(true);
     try {
       await fetch('/api/orders', { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tableId, tableNumber: parseInt(tableId), items: cart }) 
+        body: JSON.stringify({ 
+          tableId, 
+          tableNumber: parseInt(tableId), 
+          items: cart,
+          customerName: customerName.trim()
+        }) 
       });
       setCart([]);
       setIsCartViewOpen(false);
@@ -113,7 +125,7 @@ export default function MenuClient() {
 
   if (isCartViewOpen) {
     return (
-      <div className="min-h-screen bg-secondary pb-32 animate-in slide-in-from-right-full duration-300">
+      <div className="min-h-screen bg-secondary pb-40 animate-in slide-in-from-right-full duration-300">
         <header className="sticky top-0 z-40 bg-white shadow-sm p-4 flex items-center gap-4 text-foreground">
           <button onClick={() => setIsCartViewOpen(false)} className="p-1 hover:bg-gray-100 rounded-full">
             <ChevronLeft size={24} />
@@ -172,19 +184,28 @@ export default function MenuClient() {
         </main>
 
         {/* Sticky Cart Bar for Final Place Order */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white p-4 rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)] flex items-center justify-between z-50">
-          <div>
-            <p className="text-sm font-semibold text-foreground/90">Total Payable</p>
-            <p className="font-extrabold text-xl text-foreground">₹{cartTotal}</p>
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-secondary/80 backdrop-blur-md border-t">
+          <div className="max-w-md mx-auto space-y-3">
+            <input 
+              type="text" 
+              placeholder="Your Name (Required)" 
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              className="w-full p-3 rounded-xl border bg-card text-foreground placeholder:text-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/50"
+              required
+            />
+            <div className="flex justify-between items-center px-2">
+              <p className="font-extrabold text-xl text-foreground">₹{cartTotal}</p>
+              <button 
+                onClick={placeOrder}
+                disabled={isPlacingOrder}
+                className="bg-primary text-primary-foreground px-8 py-3 rounded-2xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+              >
+                {isPlacingOrder ? 'Placing...' : 'Confirm Order'}
+                <ShoppingCart size={18} />
+              </button>
+            </div>
           </div>
-          <button 
-            onClick={placeOrder}
-            disabled={isPlacingOrder}
-            className="bg-primary text-primary-foreground px-8 py-3.5 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-70 flex items-center gap-2 active:scale-95"
-          >
-            {isPlacingOrder ? 'Placing...' : 'Confirm Order'}
-            <ShoppingCart size={18} />
-          </button>
         </div>
       </div>
     );

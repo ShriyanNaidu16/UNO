@@ -7,6 +7,7 @@ import { Clock, Check, ChefHat, PowerOff, CheckCircle } from 'lucide-react';
 // Extended type for UI
 type KitchenOrder = Order & {
   table_number: number;
+  customer_name?: string | null;
   items: (OrderItem & { menu_item_name: string })[];
 };
 
@@ -14,7 +15,7 @@ export default function KitchenDashboard() {
   const [orders, setOrders] = useState<KitchenOrder[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<MenuCategory[]>([]);
-  const [activeTab, setActiveTab] = useState<'orders' | 'menu'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'billing' | 'menu'>('orders');
 
   // New Item Form State
   const [isAddingItem, setIsAddingItem] = useState(false);
@@ -60,6 +61,24 @@ export default function KitchenDashboard() {
       });
     } catch (err) {
       console.error("Failed to update status");
+    }
+  };
+
+  const markAsPaid = async (orderId: string, method: 'cash' | 'card' | 'upi') => {
+    // 1. Update order status to paid
+    updateOrderStatus(orderId, 'paid');
+    
+    // 2. We need to find the bill ID associated with this order.
+    // For this prototype, if there's no bill, we might create one or assume the backend handles it.
+    // Assuming the backend has a way to mark the bill. Let's call a new endpoint:
+    try {
+      await fetch(`/api/bills/order_${orderId}/pay`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payment_method: method })
+      });
+    } catch (err) {
+      console.error("Failed to mark bill as paid", err);
     }
   };
 
@@ -125,6 +144,12 @@ export default function KitchenDashboard() {
               Live Orders
             </button>
             <button 
+              onClick={() => setActiveTab('billing')}
+              className={`px-6 py-2 rounded-lg font-bold transition-colors ${activeTab === 'billing' ? 'bg-primary text-primary-foreground' : 'text-foreground/70 hover:bg-gray-100'}`}
+            >
+              Pending Payments
+            </button>
+            <button 
               onClick={() => setActiveTab('menu')}
               className={`px-6 py-2 rounded-lg font-bold transition-colors ${activeTab === 'menu' ? 'bg-primary text-primary-foreground' : 'text-foreground/70 hover:bg-gray-100'}`}
             >
@@ -148,7 +173,10 @@ export default function KitchenDashboard() {
             <div key={order.id} className="bg-card rounded-2xl p-6 shadow-sm border flex flex-col">
               <div className="flex justify-between items-start mb-4 border-b pb-4">
                 <div>
-                  <h2 className="text-2xl font-bold text-primary">Table {order.table_number}</h2>
+                  <h2 className="text-2xl font-bold text-primary">
+                    Table {order.table_number}
+                    {order.customer_name && <span className="text-lg text-foreground/80 font-semibold ml-2">({order.customer_name})</span>}
+                  </h2>
                   <p className="text-sm text-foreground/60 flex items-center gap-1 mt-1">
                     <Clock size={14} />
                     {new Date(order.created_at).toLocaleTimeString()}
@@ -204,9 +232,74 @@ export default function KitchenDashboard() {
               </div>
             </div>
           ))}
-          {orders.length === 0 && (
+          {orders.filter(o => o.status !== 'served' && o.status !== 'billed' && o.status !== 'paid' && o.status !== 'closed').length === 0 && (
             <div className="col-span-full py-12 text-center text-foreground/50 border-2 border-dashed rounded-2xl">
               No active orders right now.
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'billing' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {orders.filter(o => o.status === 'served' || o.status === 'billed').map(order => (
+            <div key={order.id} className="bg-card rounded-2xl p-6 shadow-sm border flex flex-col">
+              <div className="flex justify-between items-start mb-4 border-b pb-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-primary">
+                    Table {order.table_number}
+                    {order.customer_name && <span className="text-lg text-foreground/80 font-semibold ml-2">({order.customer_name})</span>}
+                  </h2>
+                  <p className="text-sm text-foreground/60 flex items-center gap-1 mt-1">
+                    <Clock size={14} />
+                    {new Date(order.created_at).toLocaleTimeString()}
+                  </p>
+                </div>
+                <div className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-orange-100 text-orange-700">
+                  Needs Payment
+                </div>
+              </div>
+
+              <div className="flex-1 space-y-3 mb-6">
+                {order.items.map(item => (
+                  <div key={item.id}>
+                    <div className="flex justify-between font-medium">
+                      <span>{item.quantity}x {item.menu_item_name}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-2 mt-auto">
+                <div className="flex flex-col w-full gap-2">
+                  <p className="text-sm font-semibold text-center w-full">Mark Paid Via:</p>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => markAsPaid(order.id, 'cash')}
+                      className="flex-1 bg-orange-100 text-orange-700 py-2 rounded-lg font-bold hover:bg-orange-200 transition-colors"
+                    >
+                      Cash
+                    </button>
+                    <button 
+                      onClick={() => markAsPaid(order.id, 'upi')}
+                      className="flex-1 bg-green-100 text-green-700 py-2 rounded-lg font-bold hover:bg-green-200 transition-colors"
+                    >
+                      UPI
+                    </button>
+                    <button 
+                      onClick={() => markAsPaid(order.id, 'card')}
+                      className="flex-1 bg-purple-100 text-purple-700 py-2 rounded-lg font-bold hover:bg-purple-200 transition-colors"
+                    >
+                      Card
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+          {orders.filter(o => o.status === 'served' || o.status === 'billed').length === 0 && (
+            <div className="col-span-full py-12 text-center text-foreground/50 border-2 border-dashed rounded-2xl">
+              No pending payments.
             </div>
           )}
         </div>
