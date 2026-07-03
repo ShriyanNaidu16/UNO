@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import * as jose from 'jose';
+import { store } from '@/lib/store';
 
 // Define the expected output format
 type RevenueData = {
@@ -63,8 +64,7 @@ export async function GET(request: Request) {
       finalBills = bills || [];
     } catch (err) {
       console.log('Supabase fetch failed, falling back to local memory store for prototype demo');
-      const { store } = await import('@/lib/store');
-      finalBills = store.bills.filter(b => 
+      finalBills = (store?.bills || []).filter(b => 
         b.payment_status === 'paid' && 
         b.payment_date && 
         new Date(b.payment_date) >= startOfDay && 

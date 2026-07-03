@@ -47,8 +47,23 @@ export default function CheckoutClient() {
 
   const handlePayment = async () => {
     setPaymentStatus('processing');
+    
     // Mock Razorpay delay
     await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Mark all active orders as paid in the backend
+    try {
+      await Promise.all(activeOrders.map(order => 
+        fetch('/api/orders/status', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId: order.id, status: 'paid' })
+        })
+      ));
+    } catch (err) {
+      console.error("Failed to mark orders as paid", err);
+    }
+
     setPaymentStatus('success');
   };
 
