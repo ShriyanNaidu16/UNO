@@ -9,23 +9,32 @@ CREATE TABLE tables (
 
 -- Menu Categories
 CREATE TABLE menu_categories (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name TEXT NOT NULL,
-    display_order INT NOT NULL DEFAULT 0,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name VARCHAR(255) NOT NULL,
+    name_te VARCHAR(255),
+    name_hi VARCHAR(255),
+    name_kn VARCHAR(255),
+    display_order INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Menu Items
 CREATE TABLE menu_items (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     category_id UUID REFERENCES menu_categories(id) ON DELETE CASCADE,
-    name TEXT NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    name_te VARCHAR(255),
+    name_hi VARCHAR(255),
+    name_kn VARCHAR(255),
     description TEXT,
+    description_te TEXT,
+    description_hi TEXT,
+    description_kn TEXT,
     price DECIMAL(10, 2) NOT NULL,
-    image_url TEXT,
+    image_url VARCHAR(1024),
     is_available BOOLEAN DEFAULT true,
-    veg_nonveg_tag TEXT CHECK (veg_nonveg_tag IN ('veg', 'non-veg', 'vegan')),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    veg_nonveg_tag VARCHAR(50) CHECK (veg_nonveg_tag IN ('veg', 'non-veg', 'vegan')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Orders

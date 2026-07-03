@@ -123,7 +123,7 @@ export default function RevenueDashboard() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="hour" />
                 <YAxis />
-                <Tooltip formatter={(value: number) => `₹${value.toFixed(2)}`} />
+                <Tooltip formatter={(value: any) => `₹${Number(value || 0).toFixed(2)}`} />
                 <Legend />
                 <Bar dataKey="upi" name="UPI" stackId="a" fill="#22c55e" />
                 <Bar dataKey="card" name="Card" stackId="a" fill="#a855f7" />

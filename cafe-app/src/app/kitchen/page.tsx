@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { Order, OrderItem, MenuItem, MenuCategory } from '@/lib/types';
 import { Clock, Check, ChefHat, PowerOff, CheckCircle } from 'lucide-react';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
+import LanguageSelector from '@/components/LanguageSelector';
 
 // Extended type for UI
 type KitchenOrder = Order & {
@@ -12,7 +14,13 @@ type KitchenOrder = Order & {
 };
 
 export default function KitchenDashboard() {
+  const { t, language } = useLanguage();
   const [orders, setOrders] = useState<KitchenOrder[]>([]);
+
+  const loc = (obj: any, key: string) => {
+    if (language === 'en') return obj[key];
+    return obj[`${key}_${language}`] || obj[key];
+  };
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [activeTab, setActiveTab] = useState<'orders' | 'billing' | 'menu'>('orders');
@@ -129,14 +137,14 @@ export default function KitchenDashboard() {
 
   return (
     <div className="min-h-screen bg-secondary p-8">
-      <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <header className="mb-8 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Kitchen Dashboard</h1>
           <p className="text-foreground/60 mt-1">Manage live orders and menu availability</p>
         </div>
         
-        <div className="flex gap-4">
-          <div className="flex bg-card p-1 rounded-xl shadow-sm border">
+        <div className="flex flex-col md:flex-row flex-wrap items-start md:items-center gap-4">
+          <div className="flex flex-wrap sm:flex-nowrap bg-card p-1 rounded-xl shadow-sm border gap-1 w-full md:w-auto">
             <button 
               onClick={() => setActiveTab('orders')}
               className={`px-6 py-2 rounded-lg font-bold transition-colors ${activeTab === 'orders' ? 'bg-primary text-primary-foreground' : 'text-foreground/70 hover:bg-gray-100'}`}
@@ -157,12 +165,15 @@ export default function KitchenDashboard() {
             </button>
           </div>
 
-          <div className="flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-xl font-semibold border border-green-200">
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-            </span>
-            Live API
+          <div className="flex items-center justify-between md:justify-start w-full md:w-auto gap-4">
+            <div className="flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-xl font-semibold border border-green-200">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+              </span>
+              Live API
+            </div>
+            <LanguageSelector />
           </div>
         </div>
       </header>
@@ -191,7 +202,7 @@ export default function KitchenDashboard() {
                 {order.items.map(item => (
                   <div key={item.id}>
                     <div className="flex justify-between font-medium">
-                      <span>{item.quantity}x {item.menu_item_name}</span>
+                      <span>{item.quantity}x {loc(item, 'menu_item_name')}</span>
                     </div>
                     {item.special_instructions && (
                       <p className="text-sm text-destructive bg-destructive/10 px-2 py-1 rounded mt-1">
@@ -264,16 +275,16 @@ export default function KitchenDashboard() {
                 {order.items.map(item => (
                   <div key={item.id}>
                     <div className="flex justify-between font-medium">
-                      <span>{item.quantity}x {item.menu_item_name}</span>
+                      <span>{item.quantity}x {loc(item, 'menu_item_name')}</span>
                     </div>
                   </div>
                 ))}
               </div>
 
               <div className="flex gap-2 mt-auto">
-                <div className="flex flex-col w-full gap-2">
+                <div className="flex flex-col w-full gap-3">
                   <p className="text-sm font-semibold text-center w-full">Mark Paid Via:</p>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2 w-full">
                     <button 
                       onClick={() => markAsPaid(order.id, 'cash')}
                       className="flex-1 bg-orange-100 text-orange-700 py-2 rounded-lg font-bold hover:bg-orange-200 transition-colors"
@@ -334,7 +345,7 @@ export default function KitchenDashboard() {
               <div>
                 <label className="block text-sm font-semibold mb-1">Category *</label>
                 <select required value={newItemCategory} onChange={e => setNewItemCategory(e.target.value)} className="w-full p-2 rounded-lg border bg-white">
-                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  {categories.map(c => <option key={c.id} value={c.id}>{loc(c, 'name')}</option>)}
                 </select>
               </div>
               <div>
@@ -363,12 +374,12 @@ export default function KitchenDashboard() {
               
               return (
                 <div key={category.id}>
-                  <h3 className="font-bold text-lg border-b pb-2 mb-4">{category.name}</h3>
+                  <h3 className="font-bold text-lg border-b pb-2 mb-4">{loc(category, 'name')}</h3>
                   <div className="space-y-4">
                     {categoryItems.map(item => (
-                      <div key={item.id} className={`flex items-center justify-between p-4 rounded-xl border ${item.is_available ? 'bg-white' : 'bg-red-50 border-red-100'}`}>
+                      <div key={item.id} className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border gap-4 ${item.is_available ? 'bg-white' : 'bg-red-50 border-red-100'}`}>
                         <div>
-                          <p className={`font-semibold ${!item.is_available && 'text-red-800 line-through'}`}>{item.name}</p>
+                          <p className={`font-semibold ${!item.is_available && 'text-red-800 line-through'}`}>{loc(item, 'name')}</p>
                           <p className="text-sm text-foreground/60">₹{item.price}</p>
                         </div>
                         <button

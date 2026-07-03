@@ -4,11 +4,19 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Receipt, CreditCard, Download, Star } from 'lucide-react';
 import jsPDF from 'jspdf';
+import { useLanguage } from '@/lib/i18n/LanguageContext';
+import LanguageSelector from '@/components/LanguageSelector';
 
 export default function CheckoutClient() {
+  const { t, language } = useLanguage();
   const searchParams = useSearchParams();
   const router = useRouter();
   const tableId = searchParams.get('table');
+
+  const loc = (obj: any, key: string) => {
+    if (language === 'en') return obj[key];
+    return obj[`${key}_${language}`] || obj[key];
+  };
 
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'processing' | 'success'>('pending');
   const [processingMethod, setProcessingMethod] = useState<string | null>(null);
@@ -90,7 +98,7 @@ export default function CheckoutClient() {
     let yPos = 75;
     activeOrders.forEach(order => {
       order.items.forEach((item: any) => {
-        doc.text(`${item.quantity}x ${item.menu_item_name}`, 20, yPos);
+        doc.text(`${item.quantity}x ${loc(item, 'menu_item_name')}`, 20, yPos);
         yPos += 10;
       });
     });
@@ -123,20 +131,20 @@ export default function CheckoutClient() {
           <div className="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto">
             <Receipt size={40} />
           </div>
-          <h1 className="text-3xl font-bold text-foreground">Payment Successful!</h1>
-          <p className="text-foreground/60">Thank you. Your bill has been paid.</p>
+          <h1 className="text-3xl font-bold text-foreground">{t('Payment Successful!')}</h1>
+          <p className="text-foreground/60">{t('Thank you. Your bill has been paid.')}</p>
           
           <button 
             onClick={downloadReceipt}
             className="w-full bg-secondary text-secondary-foreground py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-secondary/80 transition-colors"
           >
-            <Download size={20} /> Download Receipt
+            <Download size={20} /> {t('Download Receipt')}
           </button>
           
           <div className="pt-6 border-t mt-6">
             {!isReviewSubmitted ? (
               <div className="space-y-4">
-                <p className="text-sm font-semibold text-foreground/80">How was your food?</p>
+                <p className="text-sm font-semibold text-foreground/80">{t('How was your food?')}</p>
                 <div className="flex justify-center gap-2 text-yellow-400 mb-4">
                   {[1,2,3,4,5].map(star => (
                     <Star 
@@ -151,7 +159,7 @@ export default function CheckoutClient() {
                 {rating > 0 && (
                   <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
                     <textarea 
-                      placeholder="Share your experience (optional)..."
+                      placeholder={t('Share your experience (optional)...')}
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
                       className="w-full p-3 rounded-xl border bg-secondary/30 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 min-h-[80px]"
@@ -160,19 +168,19 @@ export default function CheckoutClient() {
                       onClick={() => setIsReviewSubmitted(true)}
                       className="w-full mt-3 bg-primary text-primary-foreground py-2.5 rounded-xl font-bold hover:bg-primary/90 transition-colors text-sm"
                     >
-                      Submit Feedback
+                      {t('Submit Feedback')}
                     </button>
                   </div>
                 )}
               </div>
             ) : (
               <div className="animate-in zoom-in duration-300 py-4">
-                <p className="text-green-600 font-bold text-lg">Thank you for your feedback! 💖</p>
+                <p className="text-green-600 font-bold text-lg">{t('Thank you for your feedback! 💖')}</p>
                 <button 
                   onClick={() => router.push(`/?table=${tableId}`)}
                   className="mt-4 text-primary font-semibold underline text-sm"
                 >
-                  Return to Menu
+                  {t('Return to Menu')}
                 </button>
               </div>
             )}
@@ -183,38 +191,41 @@ export default function CheckoutClient() {
   }
 
   return (
-    <div className="min-h-screen bg-secondary p-4 flex flex-col items-center pt-12">
-      <div className="bg-card p-6 rounded-3xl shadow-sm border max-w-md w-full space-y-6">
-        <h1 className="text-2xl font-bold text-foreground mb-4">Bill Details</h1>
+    <div className="min-h-screen bg-secondary p-4 flex flex-col items-center pt-12 relative">
+      <div className="absolute top-4 right-4">
+        <LanguageSelector />
+      </div>
+      <div className="bg-card p-6 rounded-3xl shadow-sm border max-w-md w-full space-y-6 mt-8">
+        <h1 className="text-2xl font-bold text-foreground mb-4">{t('Bill Details')}</h1>
         
         <div className="space-y-3 text-sm text-foreground/80 border-b pb-6">
           <div className="flex justify-between">
-            <span>Subtotal</span>
+            <span>{t('Subtotal')}</span>
             <span className="font-semibold">₹{subtotal.toFixed(2)}</span>
           </div>
           <div className="flex justify-between">
-            <span>GST (5%)</span>
+            <span>{t('GST')}</span>
             <span className="font-semibold">₹{gst.toFixed(2)}</span>
           </div>
           <div className="flex justify-between">
-            <span>Service Charge (5%)</span>
+            <span>{t('Service Charge')}</span>
             <span className="font-semibold">₹{serviceCharge.toFixed(2)}</span>
           </div>
         </div>
 
         <div className="flex justify-between text-xl font-bold text-foreground pt-2">
-          <span>Total</span>
+          <span>{t('Total')}</span>
           <span>₹{total.toFixed(2)}</span>
         </div>
 
         <div className="mt-6 space-y-3">
-          <p className="text-center font-semibold text-foreground/80 mb-2">Select Payment Method</p>
+          <p className="text-center font-semibold text-foreground/80 mb-2">{t('Select Payment Method')}</p>
           <button 
             onClick={() => handlePayment('upi')}
             disabled={paymentStatus === 'processing'}
             className="w-full bg-[#22c55e] text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-sm disabled:opacity-70"
           >
-            {paymentStatus === 'processing' && processingMethod === 'upi' ? 'Processing...' : `Pay ₹${total.toFixed(2)} via UPI`}
+            {paymentStatus === 'processing' && processingMethod === 'upi' ? t('Processing...') : t('Pay via UPI', { total: total.toFixed(2) })}
           </button>
           <button 
             onClick={() => handlePayment('card')}
@@ -222,14 +233,14 @@ export default function CheckoutClient() {
             className="w-full bg-[#a855f7] text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-sm disabled:opacity-70"
           >
             <CreditCard size={20} />
-            {paymentStatus === 'processing' && processingMethod === 'card' ? 'Processing...' : `Pay ₹${total.toFixed(2)} via Card`}
+            {paymentStatus === 'processing' && processingMethod === 'card' ? t('Processing...') : t('Pay via Card', { total: total.toFixed(2) })}
           </button>
           <button 
             onClick={() => handlePayment('cash')}
             disabled={paymentStatus === 'processing'}
             className="w-full bg-[#f97316] text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-sm disabled:opacity-70"
           >
-            {paymentStatus === 'processing' && processingMethod === 'cash' ? 'Processing...' : `Pay ₹${total.toFixed(2)} with Cash`}
+            {paymentStatus === 'processing' && processingMethod === 'cash' ? t('Processing...') : t('Pay with Cash', { total: total.toFixed(2) })}
           </button>
         </div>
       </div>
