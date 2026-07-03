@@ -24,11 +24,13 @@ export default function RevenueDashboard() {
 
   useEffect(() => {
     fetchRevenueData();
+    const interval = setInterval(() => fetchRevenueData(true), 5000);
+    return () => clearInterval(interval);
   }, [date]);
 
-  const fetchRevenueData = async () => {
-    setLoading(true);
-    setError(null);
+  const fetchRevenueData = async (isBackground = false) => {
+    if (!isBackground) setLoading(true);
+    if (!isBackground) setError(null);
     try {
       // Pass a dummy token for local development testing since JWT secret is "fallback-secret-for-development"
       // In production, this would be a real admin token
@@ -37,7 +39,8 @@ export default function RevenueDashboard() {
       const res = await fetch(`/api/admin/revenue?date=${date}`, {
         headers: {
           'Authorization': `Bearer ${token}`
-        }
+        },
+        cache: 'no-store'
       });
       
       if (!res.ok) {
@@ -47,9 +50,9 @@ export default function RevenueDashboard() {
       const json = await res.json();
       setData(json);
     } catch (err: any) {
-      setError(err.message);
+      if (!isBackground) setError(err.message);
     } finally {
-      setLoading(false);
+      if (!isBackground) setLoading(false);
     }
   };
 
@@ -71,12 +74,20 @@ export default function RevenueDashboard() {
     <div className="bg-card p-6 rounded-2xl shadow-sm border mt-8">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold">Daily Revenue Dashboard</h2>
-        <input 
-          type="date" 
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="px-4 py-2 rounded-lg border bg-background"
-        />
+        <div className="flex gap-3">
+          <button 
+            onClick={() => fetchRevenueData()}
+            className="px-4 py-2 bg-secondary text-secondary-foreground rounded-lg border font-semibold hover:bg-secondary/80 transition-colors"
+          >
+            Refresh
+          </button>
+          <input 
+            type="date" 
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="px-4 py-2 rounded-lg border bg-background"
+          />
+        </div>
       </div>
 
       {error && (

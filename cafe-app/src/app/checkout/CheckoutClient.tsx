@@ -11,6 +11,7 @@ export default function CheckoutClient() {
   const tableId = searchParams.get('table');
 
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'processing' | 'success'>('pending');
+  const [processingMethod, setProcessingMethod] = useState<string | null>(null);
   const [rating, setRating] = useState<number>(0);
   const [comment, setComment] = useState('');
   const [isReviewSubmitted, setIsReviewSubmitted] = useState(false);
@@ -45,26 +46,33 @@ export default function CheckoutClient() {
   const serviceCharge = subtotal * 0.05; // 5% optional service charge
   const total = subtotal + gst + serviceCharge;
 
-  const handlePayment = async () => {
+  const handlePayment = async (method: 'upi' | 'card' | 'cash') => {
+    setProcessingMethod(method);
     setPaymentStatus('processing');
     
-    // Mock Razorpay delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Mock processing delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Mark all active orders as paid in the backend
+    // Process payment and create bill in backend
     try {
-      await Promise.all(activeOrders.map(order => 
-        fetch('/api/orders/status', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ orderId: order.id, status: 'paid' })
+      await fetch('/api/bills', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tableId,
+          subtotal: subtotal * 100,
+          gst_amount: gst * 100,
+          service_charge_amount: serviceCharge * 100,
+          total_amount: total * 100,
+          payment_method: method
         })
-      ));
+      });
     } catch (err) {
-      console.error("Failed to mark orders as paid", err);
+      console.error("Failed to process payment", err);
     }
 
     setPaymentStatus('success');
+    setProcessingMethod(null);
   };
 
   const downloadReceipt = () => {
@@ -199,14 +207,31 @@ export default function CheckoutClient() {
           <span>₹{total.toFixed(2)}</span>
         </div>
 
-        <button 
-          onClick={handlePayment}
-          disabled={paymentStatus === 'processing'}
-          className="w-full mt-6 bg-primary text-primary-foreground py-4 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors shadow-lg disabled:opacity-70"
-        >
-          <CreditCard size={20} />
-          {paymentStatus === 'processing' ? 'Processing...' : `Pay ₹${total.toFixed(2)} via Razorpay`}
-        </button>
+        <div className="mt-6 space-y-3">
+          <p className="text-center font-semibold text-foreground/80 mb-2">Select Payment Method</p>
+          <button 
+            onClick={() => handlePayment('upi')}
+            disabled={paymentStatus === 'processing'}
+            className="w-full bg-[#22c55e] text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-sm disabled:opacity-70"
+          >
+            {paymentStatus === 'processing' && processingMethod === 'upi' ? 'Processing...' : `Pay ₹${total.toFixed(2)} via UPI`}
+          </button>
+          <button 
+            onClick={() => handlePayment('card')}
+            disabled={paymentStatus === 'processing'}
+            className="w-full bg-[#a855f7] text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-sm disabled:opacity-70"
+          >
+            <CreditCard size={20} />
+            {paymentStatus === 'processing' && processingMethod === 'card' ? 'Processing...' : `Pay ₹${total.toFixed(2)} via Card`}
+          </button>
+          <button 
+            onClick={() => handlePayment('cash')}
+            disabled={paymentStatus === 'processing'}
+            className="w-full bg-[#f97316] text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-sm disabled:opacity-70"
+          >
+            {paymentStatus === 'processing' && processingMethod === 'cash' ? 'Processing...' : `Pay ₹${total.toFixed(2)} with Cash`}
+          </button>
+        </div>
       </div>
     </div>
   );

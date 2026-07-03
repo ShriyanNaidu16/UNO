@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
 import { supabase } from '@/lib/supabase';
 import * as jose from 'jose';
 import { store } from '@/lib/store';
@@ -39,13 +40,13 @@ export async function GET(request: Request) {
     // 2. Parse Date
     const { searchParams } = new URL(request.url);
     const dateParam = searchParams.get('date'); // YYYY-MM-DD
-    const targetDate = dateParam ? new Date(dateParam) : new Date();
+    const targetDate = dateParam ? new Date(`${dateParam}T00:00:00Z`) : new Date();
     
-    // Set start and end of the day for filtering
+    // Set start and end of the day for filtering (using UTC to prevent timezone offset bugs)
     const startOfDay = new Date(targetDate);
-    startOfDay.setHours(0, 0, 0, 0);
+    startOfDay.setUTCHours(0, 0, 0, 0);
     const endOfDay = new Date(targetDate);
-    endOfDay.setHours(23, 59, 59, 999);
+    endOfDay.setUTCHours(23, 59, 59, 999);
 
     // 3. Fetch Data from Supabase
     let finalBills = [];
@@ -62,8 +63,13 @@ export async function GET(request: Request) {
         throw error;
       }
       finalBills = bills || [];
+      
+      // Fallback to local store if Supabase is empty (likely unconfigured or prototype phase)
+      if (finalBills.length === 0) {
+        throw new Error('Supabase returned empty, falling back to local store');
+      }
     } catch (err) {
-      console.log('Supabase fetch failed, falling back to local memory store for prototype demo');
+      console.log('Supabase fetch failed or empty, falling back to local memory store for prototype demo');
       finalBills = (store?.bills || []).filter(b => 
         b.payment_status === 'paid' && 
         b.payment_date && 
