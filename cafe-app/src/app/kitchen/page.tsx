@@ -136,40 +136,19 @@ export default function KitchenDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-secondary p-8">
-      <header className="mb-8 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Kitchen Dashboard</h1>
-          <p className="text-foreground/60 mt-1">Manage live orders and menu availability</p>
-        </div>
-        
-        <div className="flex flex-col md:flex-row flex-wrap items-start md:items-center gap-4">
-          <div className="flex flex-wrap sm:flex-nowrap bg-card p-1 rounded-xl shadow-sm border gap-1 w-full md:w-auto">
-            <button 
-              onClick={() => setActiveTab('orders')}
-              className={`px-6 py-2 rounded-lg font-bold transition-colors ${activeTab === 'orders' ? 'bg-primary text-primary-foreground' : 'text-foreground/70 hover:bg-gray-100'}`}
-            >
-              Live Orders
-            </button>
-            <button 
-              onClick={() => setActiveTab('billing')}
-              className={`px-6 py-2 rounded-lg font-bold transition-colors ${activeTab === 'billing' ? 'bg-primary text-primary-foreground' : 'text-foreground/70 hover:bg-gray-100'}`}
-            >
-              Pending Payments
-            </button>
-            <button 
-              onClick={() => setActiveTab('menu')}
-              className={`px-6 py-2 rounded-lg font-bold transition-colors ${activeTab === 'menu' ? 'bg-primary text-primary-foreground' : 'text-foreground/70 hover:bg-gray-100'}`}
-            >
-              Menu Stock
-            </button>
+    <div className="min-h-screen bg-secondary pb-12">
+      <header className="sticky top-0 z-40 bg-primary text-primary-foreground p-4 md:p-6 shadow-md rounded-b-3xl mb-6 transition-all duration-300">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 max-w-7xl mx-auto">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold">Kitchen Dashboard</h1>
+            <p className="text-primary-foreground/80 mt-1 text-sm md:text-base">Manage live orders and menu availability</p>
           </div>
-
-          <div className="flex items-center justify-between md:justify-start w-full md:w-auto gap-4">
-            <div className="flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-xl font-semibold border border-green-200">
-              <span className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+          
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <div className="flex items-center gap-2 bg-green-500/20 text-green-100 px-3 py-1.5 rounded-xl font-bold border border-green-400/30 shadow-sm text-sm">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-300 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-400"></span>
               </span>
               Live API
             </div>
@@ -178,7 +157,29 @@ export default function KitchenDashboard() {
         </div>
       </header>
 
-      {activeTab === 'orders' && (
+      <main className="px-4 md:px-8 max-w-7xl mx-auto space-y-6">
+        <div className="flex flex-wrap sm:flex-nowrap bg-white/50 backdrop-blur-md p-1.5 rounded-2xl shadow-sm border border-black/5 gap-1 w-full max-w-2xl mx-auto">
+          <button 
+            onClick={() => setActiveTab('orders')}
+            className={`flex-1 px-4 py-2.5 rounded-xl font-bold transition-all duration-300 active:scale-95 text-sm md:text-base ${activeTab === 'orders' ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20' : 'text-foreground/70 hover:bg-black/5 hover:text-foreground'}`}
+          >
+            Live Orders
+          </button>
+          <button 
+            onClick={() => setActiveTab('billing')}
+            className={`flex-1 px-4 py-2.5 rounded-xl font-bold transition-all duration-300 active:scale-95 text-sm md:text-base ${activeTab === 'billing' ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20' : 'text-foreground/70 hover:bg-black/5 hover:text-foreground'}`}
+          >
+            Payments
+          </button>
+          <button 
+            onClick={() => setActiveTab('menu')}
+            className={`flex-1 px-4 py-2.5 rounded-xl font-bold transition-all duration-300 active:scale-95 text-sm md:text-base ${activeTab === 'menu' ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20' : 'text-foreground/70 hover:bg-black/5 hover:text-foreground'}`}
+          >
+            Menu Stock
+          </button>
+        </div>
+
+        {activeTab === 'orders' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {orders.filter(o => o.status !== 'served' && o.status !== 'billed' && o.status !== 'paid' && o.status !== 'closed').map(order => (
             <div key={order.id} className="bg-card rounded-2xl p-6 shadow-sm border flex flex-col">
@@ -401,6 +402,7 @@ export default function KitchenDashboard() {
           </div>
         </div>
       )}
+      </main>
     </div>
   );
 }

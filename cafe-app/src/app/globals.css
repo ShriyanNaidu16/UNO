@@ -17,10 +17,10 @@
 
 @layer base {
   :root {
-    --background: #F5EAEA;
+    --background: #CDC0B4;
     --foreground: #3a1c1c; /* Deep rich brown for readable text */
     --primary: #732525; /* Deep Red */
-    --primary-foreground: #F5EAEA;
+    --primary-foreground: #CDC0B4;
     --secondary: #ebdada; /* Slightly darker shade of background */
     --secondary-foreground: #732525;
     --accent: #9A7439; /* Gold */
@@ -33,17 +33,17 @@
 
   .dark {
     --background: #2b1111;
-    --foreground: #F5EAEA;
+    --foreground: #CDC0B4;
     --primary: #732525; 
-    --primary-foreground: #F5EAEA;
+    --primary-foreground: #CDC0B4;
     --secondary: #3d1b1b;
-    --secondary-foreground: #F5EAEA;
+    --secondary-foreground: #CDC0B4;
     --accent: #9A7439; 
     --accent-foreground: #ffffff;
     --destructive: #ef4444;
     --destructive-foreground: #fafafa;
     --card: #3b1818;
-    --card-foreground: #F5EAEA;
+    --card-foreground: #CDC0B4;
   }
 }
 

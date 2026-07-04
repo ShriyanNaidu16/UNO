@@ -228,7 +228,7 @@ export default function MenuClient() {
             <div className="mt-6 pt-4 border-t border-dashed">
               <button 
                 onClick={() => setIsCartViewOpen(false)}
-                className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border border-gray-300 font-semibold text-foreground/80 hover:bg-gray-50 transition-colors"
+                className="flex items-center justify-center gap-2 w-full py-3.5 rounded-2xl border-2 border-gray-200 font-semibold text-foreground/80 hover:bg-gray-50 hover:border-gray-300 active:scale-95 transition-all duration-300 ease-out"
               >
                 <Plus size={18} /> {t('Add more items')}
               </button>
@@ -240,24 +240,19 @@ export default function MenuClient() {
                 <h3 className="font-bold text-lg mb-3">Perfect Pairings</h3>
                 <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide no-scrollbar -mx-4 px-4">
                   {cartSuggestions.map(item => (
-                    <div key={item.id} className="min-w-[140px] max-w-[140px] bg-white rounded-xl shadow-sm border overflow-hidden flex flex-col flex-shrink-0">
-                      <div className="h-24 bg-gray-100 relative">
-                        {item.image_url && <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />}
-                        <div className="absolute top-1.5 right-1.5 bg-white/90 backdrop-blur-sm px-1.5 py-0.5 rounded-full flex items-center shadow-sm">
-                          <span className={`w-1.5 h-1.5 rounded-full ${item.veg_nonveg_tag === 'veg' ? 'bg-green-600' : 'bg-red-600'}`} />
-                        </div>
+                    <div key={item.id} className="min-w-[160px] max-w-[160px] bg-white rounded-2xl shadow-sm border p-3 flex flex-col flex-shrink-0">
+                      <div className="flex items-start gap-2 mb-2">
+                        <span className={`w-2 h-2 mt-1 flex-shrink-0 rounded-full ${item.veg_nonveg_tag === 'veg' ? 'bg-green-500' : 'bg-red-500'}`} />
+                        <h4 className="font-semibold text-sm leading-tight flex-1 line-clamp-2">{loc(item, 'name')}</h4>
                       </div>
-                      <div className="p-2.5 flex flex-col flex-1">
-                        <h4 className="font-semibold text-[13px] leading-tight flex-1 line-clamp-2">{loc(item, 'name')}</h4>
-                        <div className="flex justify-between items-center mt-3">
-                          <p className="font-bold text-sm">₹{item.price}</p>
-                          <button 
-                            onClick={() => updateQuantity(item, 1)}
-                            className="bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
-                          >
-                            + Add
-                          </button>
-                        </div>
+                      <div className="flex justify-between items-center mt-auto pt-3 border-t border-gray-100">
+                        <p className="font-bold text-sm text-foreground/90">₹{item.price}</p>
+                        <button 
+                          onClick={() => updateQuantity(item, 1)}
+                          className="bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground active:scale-95 transition-all duration-300 text-xs font-bold px-3 py-1.5 rounded-full"
+                        >
+                          + Add
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -284,7 +279,7 @@ export default function MenuClient() {
               <button 
                 onClick={handleProceedFromCart}
                 disabled={isPlacingOrder}
-                className="bg-primary text-primary-foreground px-8 py-3 rounded-2xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                className="bg-primary text-primary-foreground px-8 py-3.5 rounded-full font-bold shadow-md shadow-primary/20 hover:shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 flex items-center gap-2"
               >
                 {t('Proceed')}
                 <ChevronLeft className="rotate-180" size={18} />
@@ -302,7 +297,7 @@ export default function MenuClient() {
 
   return (
     <div className="min-h-screen bg-secondary pb-32">
-      <header className="sticky top-0 z-40 bg-primary text-primary-foreground p-4 shadow-md rounded-b-3xl">
+      <header className="sticky top-0 z-40 bg-primary text-primary-foreground p-4 shadow-md rounded-b-3xl transition-all duration-300">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold">{t('Cafe Menu')}</h1>
           <div className="flex items-center gap-3">
@@ -320,9 +315,9 @@ export default function MenuClient() {
             placeholder={t('Search for food...')} 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 rounded-xl border-none outline-none focus:ring-2 focus:ring-primary-foreground/50 shadow-sm"
+            className="w-full pl-10 pr-4 py-2.5 rounded-2xl border-none outline-none focus:ring-4 focus:ring-white/20 shadow-inner bg-black/10 text-primary-foreground placeholder:text-primary-foreground/70 transition-all duration-300"
           />
-          <Search className="absolute left-3 top-2.5 text-foreground/50" size={18} />
+          <Search className="absolute left-3 top-3 text-primary-foreground/70" size={18} />
         </div>
 
         {/* Categories Nav */}
@@ -331,10 +326,10 @@ export default function MenuClient() {
             <button
               key={category.id}
               onClick={() => scrollToCategory(category.id)}
-              className={`whitespace-nowrap px-5 py-2 rounded-full font-semibold transition-colors text-sm
+              className={`whitespace-nowrap px-5 py-2 rounded-full font-semibold transition-all duration-300 active:scale-95 text-sm shadow-sm
                 ${activeCategory === category.id 
-                  ? 'bg-primary-foreground text-primary shadow-sm' 
-                  : 'bg-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/30'}`}
+                  ? 'bg-white text-primary' 
+                  : 'bg-black/10 text-primary-foreground hover:bg-black/20 backdrop-blur-md'}`}
             >
               {loc(category, 'name')}
             </button>
@@ -407,17 +402,17 @@ export default function MenuClient() {
                             getQuantity(item.id) === 0 ? (
                               <button 
                                 onClick={() => updateQuantity(item, 1)}
-                                className="bg-white text-primary border-2 border-primary/20 hover:border-primary font-extrabold px-8 py-1.5 rounded-xl shadow-md transition-all text-sm uppercase tracking-wide"
+                                className="bg-white text-primary border-2 border-primary/20 hover:border-primary hover:bg-primary/5 font-extrabold px-8 py-2 rounded-full shadow-sm active:scale-95 transition-all duration-300 text-sm uppercase tracking-wide"
                               >
                                 {t('Add')}
                               </button>
                             ) : (
-                              <div className="flex items-center bg-white text-primary rounded-xl shadow-md border-2 border-primary/20 h-9 overflow-hidden">
-                                <button onClick={() => updateQuantity(item, -1)} className="w-9 h-full flex items-center justify-center hover:bg-gray-50 transition-colors">
+                              <div className="flex items-center bg-white text-primary rounded-full shadow-sm border-2 border-primary/20 h-9 overflow-hidden">
+                                <button onClick={() => updateQuantity(item, -1)} className="w-9 h-full flex items-center justify-center hover:bg-primary/10 active:bg-primary/20 transition-colors">
                                   <Minus size={14} />
                                 </button>
                                 <span className="w-6 text-center font-bold text-sm text-foreground">{getQuantity(item.id)}</span>
-                                <button onClick={() => updateQuantity(item, 1)} className="w-9 h-full flex items-center justify-center hover:bg-gray-50 transition-colors">
+                                <button onClick={() => updateQuantity(item, 1)} className="w-9 h-full flex items-center justify-center hover:bg-primary/10 active:bg-primary/20 transition-colors">
                                   <Plus size={14} />
                                 </button>
                               </div>
@@ -458,14 +453,14 @@ export default function MenuClient() {
 
       {/* Sticky Cart Bar for Normal Menu View */}
       {cartItemCount > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-2xl glass p-4 rounded-3xl shadow-2xl flex items-center justify-between z-50 animate-in slide-in-from-bottom-10 fade-in duration-300">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-2xl bg-primary text-primary-foreground p-4 rounded-3xl shadow-2xl flex items-center justify-between z-50 animate-in slide-in-from-bottom-10 fade-in duration-300 border border-primary-foreground/10">
           <div>
-            <p className="text-sm font-semibold text-foreground/90">{cartItemCount} {t('items')}</p>
-            <p className="font-extrabold text-xl text-foreground">₹{cartTotal}</p>
+            <p className="text-sm font-medium text-primary-foreground/90">{cartItemCount} {t('items')}</p>
+            <p className="font-extrabold text-xl text-primary-foreground">₹{cartTotal}</p>
           </div>
           <button 
             onClick={() => setIsCartViewOpen(true)}
-            className="bg-primary text-primary-foreground px-8 py-3.5 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2 active:scale-95"
+            className="bg-white text-primary px-8 py-3.5 rounded-full font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center gap-2 active:scale-95"
           >
             {t('Your Cart')}
             <ShoppingCart size={18} />

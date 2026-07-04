@@ -32,15 +32,19 @@ export default function LanguageSelector() {
     <div className="relative" ref={dropdownRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1.5 bg-primary-foreground/20 hover:bg-primary-foreground/30 px-3 py-1.5 rounded-full text-sm font-semibold transition-colors text-primary-foreground"
+        className={`flex items-center gap-1.5 backdrop-blur-md px-3 py-1.5 rounded-full text-sm font-semibold transition-all duration-300 active:scale-95 text-primary-foreground shadow-sm ${
+          isOpen 
+            ? 'scale-110 bg-black/20 ring-2 ring-white/30 shadow-md' 
+            : 'scale-100 bg-black/10 hover:bg-black/20'
+        }`}
       >
         <Globe size={16} />
         <span className="uppercase">{language}</span>
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg border overflow-hidden z-[100]">
-          <div className="py-1">
+        <div className="absolute right-0 mt-3 w-44 bg-white/90 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/20 overflow-hidden z-[100] animate-in fade-in zoom-in-95 slide-in-from-top-2 origin-top-right duration-300 ease-out">
+          <div className="p-1.5 flex flex-col gap-0.5">
             {languages.map((lang) => (
               <button
                 key={lang.code}
@@ -48,10 +52,10 @@ export default function LanguageSelector() {
                   setLanguage(lang.code);
                   setIsOpen(false);
                 }}
-                className={`w-full text-left px-4 py-2 text-sm transition-colors ${
+                className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-all duration-200 active:scale-[0.98] ${
                   language === lang.code 
                     ? 'bg-primary/10 text-primary font-bold' 
-                    : 'text-gray-700 hover:bg-gray-100'
+                    : 'text-foreground/80 hover:bg-black/5 font-medium'
                 }`}
               >
                 {lang.label}
