@@ -13,6 +13,20 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+
+  /* Godavari Heritage Tokens */
+  --color-gold: #C9A84C;
+  --color-gold-light: #F0D080;
+  --color-bg-dark: #0D0500;
+  --color-bg-maroon: #1A0800;
+  --color-text-warm: #F5ECD7;
+  --color-text-muted: #A08060;
+
+  --animate-float: float 4s ease-in-out infinite;
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-12px); }
+  }
 }
 
 @layer base {

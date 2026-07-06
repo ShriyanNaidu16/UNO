@@ -299,7 +299,15 @@ export default function MenuClient() {
     <div className="min-h-screen bg-secondary pb-32">
       <header className="sticky top-0 z-40 bg-primary text-primary-foreground p-4 shadow-md rounded-b-3xl transition-all duration-300">
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">{t('Cafe Menu')}</h1>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => router.push('/')}
+              className="p-1.5 hover:bg-white/20 rounded-full transition-colors -ml-2 active:scale-95"
+            >
+              <ChevronLeft size={24} />
+            </button>
+            <h1 className="text-2xl font-bold">{t('Cafe Menu')}</h1>
+          </div>
           <div className="flex items-center gap-3">
             <LanguageSelector />
             <div className="bg-primary-foreground/20 px-3 py-1 rounded-full text-sm font-semibold">
@@ -321,8 +329,8 @@ export default function MenuClient() {
         </div>
 
         {/* Categories Nav */}
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide no-scrollbar">
-          {categories.map(category => (
+        <div className="flex gap-2 overflow-x-visible pb-2 scrollbar-hide no-scrollbar items-center">
+          {categories.filter(c => !c.name.includes('QSR - ')).map(category => (
             <button
               key={category.id}
               onClick={() => scrollToCategory(category.id)}
@@ -334,13 +342,40 @@ export default function MenuClient() {
               {loc(category, 'name')}
             </button>
           ))}
+          {/* QSR Dropdown */}
+          {categories.some(c => c.name.includes('QSR - ')) && (
+            <div className="relative group">
+              <button
+                className={`whitespace-nowrap px-5 py-2 rounded-full font-semibold transition-all duration-300 active:scale-95 text-sm shadow-sm flex items-center gap-1
+                  ${categories.find(c => c.id === activeCategory)?.name.includes('QSR - ') 
+                    ? 'bg-white text-primary' 
+                    : 'bg-black/10 text-primary-foreground hover:bg-black/20 backdrop-blur-md'}`}
+              >
+                QSR
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div className="absolute top-full right-0 mt-2 w-48 bg-white text-gray-800 rounded-xl shadow-lg border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden">
+                <div className="max-h-64 overflow-y-auto py-2">
+                  {categories.filter(c => c.name.includes('QSR - ')).map(category => (
+                    <button
+                      key={category.id}
+                      onClick={(e) => { e.preventDefault(); scrollToCategory(category.id); }}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm font-medium transition-colors"
+                    >
+                      {loc(category, 'name').replace('QSR - ', '')}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
       <main className="p-4 max-w-2xl mx-auto mt-2">
         {/* Dietary Filters */}
         <div className="flex gap-2 mb-6">
-          {(['all', 'veg', 'non-veg'] as const).map(filter => (
+          {(['all', 'veg'] as const).map(filter => (
             <button
               key={filter}
               onClick={() => setDietaryFilter(filter)}
@@ -350,7 +385,6 @@ export default function MenuClient() {
                   : 'bg-card text-foreground/70 border-gray-200 hover:bg-gray-100'}`}
             >
               {filter === 'veg' && <span className="w-2.5 h-2.5 rounded-full bg-green-500" />}
-              {filter === 'non-veg' && <span className="w-2.5 h-2.5 rounded-full bg-red-500" />}
               {filter === 'all' && <Filter size={14} />}
               {t(filter.charAt(0).toUpperCase() + filter.slice(1) as any)}
             </button>
