@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { Order, OrderItem, MenuItem, MenuCategory } from '@/lib/types';
-import { Clock, Check, ChefHat, PowerOff, CheckCircle } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
-import LanguageSelector from '@/components/LanguageSelector';
+import { Clock, Check, ChefHat, PowerOff, CheckCircle } from 'lucide-react';
 
 // Extended type for UI
 type KitchenOrder = Order & {
@@ -152,7 +151,6 @@ export default function KitchenDashboard() {
               </span>
               Live API
             </div>
-            <LanguageSelector />
           </div>
         </div>
       </header>

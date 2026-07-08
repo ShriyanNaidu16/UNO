@@ -6,7 +6,6 @@ import { supabase } from '@/lib/supabase';
 import { Order, OrderItem } from '@/lib/types';
 import { Clock, CheckCircle2, ChefHat, ReceiptText, ArrowLeft } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/LanguageContext';
-import LanguageSelector from '@/components/LanguageSelector';
 
 type StatusOrder = Order & {
   items: (OrderItem & { menu_item_name: string })[];
@@ -66,9 +65,6 @@ export default function OrderStatusClient() {
   return (
     <div className="min-h-screen bg-secondary p-4 flex flex-col items-center">
       <div className="w-full max-w-lg space-y-6 mt-8 relative">
-        <div className="absolute top-0 right-0 -mt-12">
-          <LanguageSelector />
-        </div>
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">{t('Order Status')}</h1>
           <button 

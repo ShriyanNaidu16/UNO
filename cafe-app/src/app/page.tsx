@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import GodavariLogo from "@/components/GodavariLogo";
-import GodavariNavbar from "@/components/GodavariNavbar";
 import GodavariFooter from "@/components/GodavariFooter";
 
 export default function GodavariHomePage() {
@@ -29,13 +28,21 @@ export default function GodavariHomePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-primary-foreground">
-      <GodavariNavbar />
+    <div className="min-h-screen text-foreground selection:bg-primary selection:text-primary-foreground"
+         style={{
+           backgroundImage: "url('/bg-illustration.png')",
+           backgroundSize: 'cover',
+           backgroundPosition: 'center',
+           backgroundAttachment: 'fixed',
+           backgroundColor: '#F5EFE6'
+         }}>
 
       {/* Hero Section */}
-      <section className="relative h-screen flex flex-col items-center justify-center bg-background overflow-hidden">
-        <div className="flex flex-col items-center z-10 space-y-8 text-center mt-16 px-4">
-          <GodavariLogo size={120} className="text-primary animate-float" />
+      <section 
+        className="relative h-screen flex flex-col items-center justify-center overflow-hidden"
+      >
+        <div className="flex flex-col items-center space-y-8 text-center mt-16 px-4">
+          <GodavariLogo size={120} className="text-primary animate-float mix-blend-multiply" />
           
           <div className="space-y-4">
             <h1 className="font-serif text-primary text-5xl md:text-7xl tracking-[0.25em] uppercase">
@@ -72,7 +79,7 @@ export default function GodavariHomePage() {
       </section>
 
       {/* Three Destination Cards */}
-      <section className="px-8 py-24 bg-background">
+      <section className="px-8 py-24 bg-transparent">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
           {destinations.map((dest, i) => (
             <motion.div
