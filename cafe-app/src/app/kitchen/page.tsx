@@ -34,11 +34,13 @@ export default function KitchenDashboard() {
   const [newItemImage, setNewItemImage] = useState('');
 
   useEffect(() => {
+    let abortController = new AbortController();
+
     const fetchData = async () => {
       try {
         const [ordersRes, menuRes] = await Promise.all([
-          fetch('/api/orders'),
-          fetch('/api/menu')
+          fetch('/api/orders', { signal: abortController.signal, cache: 'no-store' }),
+          fetch('/api/menu', { signal: abortController.signal, cache: 'no-store' })
         ]);
         const ordersData = await ordersRes.json();
         const menuData = await menuRes.json();
@@ -46,14 +48,24 @@ export default function KitchenDashboard() {
         setOrders(ordersData.orders);
         setMenuItems(menuData.items);
         setCategories(menuData.categories);
-      } catch (err) {
-        console.error("Failed to fetch data", err);
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          console.error("Failed to fetch data", err);
+        }
       }
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 2000); // Polling for real-time effect
-    return () => clearInterval(interval);
+    const interval = setInterval(() => {
+      abortController.abort();
+      abortController = new AbortController();
+      fetchData();
+    }, 2000); // Polling for real-time effect
+    
+    return () => {
+      abortController.abort();
+      clearInterval(interval);
+    };
   }, []);
 
   const updateOrderStatus = async (orderId: string, newStatus: Order['status']) => {

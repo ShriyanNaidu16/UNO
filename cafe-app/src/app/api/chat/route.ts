@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { store } from '@/lib/store';
+import { supabase } from '@/lib/supabase';
 import { GoogleGenAI } from '@google/genai';
 
 const apiKey = process.env.GEMINI_API_KEY;
@@ -18,9 +18,18 @@ export async function POST(request: Request) {
       });
     }
 
-    // Prepare active menu items for the prompt
-    const availableItems = store.items.filter(item => item.is_available);
-    const menuContext = availableItems.map(item => `- ID: ${item.id}, Name: ${item.name}, Type: ${item.veg_nonveg_tag}, Description: ${item.description}`).join('\n');
+    // Fetch available menu items from Supabase
+    const { data: availableItems, error } = await supabase
+      .from('menu_items')
+      .select('*')
+      .eq('is_available', true);
+
+    if (error) {
+      console.error('Supabase error fetching menu items for chat:', error);
+      throw error;
+    }
+
+    const menuContext = (availableItems || []).map(item => `- ID: ${item.id}, Name: ${item.name}, Type: ${item.veg_nonveg_tag}, Description: ${item.description}`).join('\n');
 
     const systemPrompt = `You are an elegant, knowledgeable, and warm restaurant host for a premium dining establishment.
 Your job is to answer customer questions and recommend dishes from our menu.
@@ -64,7 +73,7 @@ RULES:
     }
 
     if (recommendedItemIds.length > 0) {
-      const recommendedItems = store.items.filter(item => recommendedItemIds.includes(item.id));
+      const recommendedItems = (availableItems || []).filter(item => recommendedItemIds.includes(item.id));
       if (recommendedItems.length > 0) {
         responseMessages.push({
           type: 'food_cards',

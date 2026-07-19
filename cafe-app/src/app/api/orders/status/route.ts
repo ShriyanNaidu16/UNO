@@ -1,14 +1,22 @@
 import { NextResponse } from 'next/server';
-import { store } from '@/lib/store';
+import { supabase } from '@/lib/supabase';
 
 export async function PATCH(request: Request) {
-  const { orderId, status } = await request.json();
+  try {
+    const { orderId, status } = await request.json();
 
-  const orderIndex = store.orders.findIndex(o => o.id === orderId);
-  if (orderIndex > -1) {
-    store.orders[orderIndex].status = status;
-    return NextResponse.json({ success: true, order: store.orders[orderIndex] });
+    const { data, error } = await supabase
+      .from('orders')
+      .update({ status })
+      .eq('id', orderId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return NextResponse.json({ success: true, order: data });
+  } catch (error) {
+    console.error('Error updating order status:', error);
+    return NextResponse.json({ error: 'Failed to update order status' }, { status: 500 });
   }
-
-  return NextResponse.json({ error: 'Order not found' }, { status: 404 });
 }

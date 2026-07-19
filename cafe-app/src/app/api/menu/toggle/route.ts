@@ -1,14 +1,22 @@
 import { NextResponse } from 'next/server';
-import { store } from '@/lib/store';
+import { supabase } from '@/lib/supabase';
 
 export async function POST(request: Request) {
-  const { itemId, isAvailable } = await request.json();
+  try {
+    const { itemId, isAvailable } = await request.json();
 
-  const itemIndex = store.items.findIndex(i => i.id === itemId);
-  if (itemIndex > -1) {
-    store.items[itemIndex].is_available = isAvailable;
-    return NextResponse.json({ success: true, item: store.items[itemIndex] });
+    const { data, error } = await supabase
+      .from('menu_items')
+      .update({ is_available: isAvailable })
+      .eq('id', itemId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return NextResponse.json({ success: true, item: data });
+  } catch (error) {
+    console.error('Error toggling menu item:', error);
+    return NextResponse.json({ error: 'Failed to toggle item' }, { status: 500 });
   }
-
-  return NextResponse.json({ error: 'Item not found' }, { status: 404 });
 }

@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 export const dynamic = 'force-dynamic';
 import { supabase } from '@/lib/supabase';
 import * as jose from 'jose';
-import { store } from '@/lib/store';
 
 // Define the expected output format
 type RevenueData = {
@@ -49,33 +48,16 @@ export async function GET(request: Request) {
     endOfDay.setUTCHours(23, 59, 59, 999);
 
     // 3. Fetch Data from Supabase
-    let finalBills = [];
-    try {
-      const { data: bills, error } = await supabase
-        .from('bills')
-        .select('total_amount, payment_method, payment_date')
-        .eq('payment_status', 'paid')
-        .gte('payment_date', startOfDay.toISOString())
-        .lte('payment_date', endOfDay.toISOString());
+    const { data: bills, error } = await supabase
+      .from('bills')
+      .select('total_amount, payment_method, payment_date')
+      .eq('payment_status', 'paid')
+      .gte('payment_date', startOfDay.toISOString())
+      .lte('payment_date', endOfDay.toISOString());
 
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
-      finalBills = bills || [];
-      
-      // Fallback to local store if Supabase is empty (likely unconfigured or prototype phase)
-      if (finalBills.length === 0) {
-        throw new Error('Supabase returned empty, falling back to local store');
-      }
-    } catch (err) {
-      console.log('Supabase fetch failed or empty, falling back to local memory store for prototype demo');
-      finalBills = (store?.bills || []).filter(b => 
-        b.payment_status === 'paid' && 
-        b.payment_date && 
-        new Date(b.payment_date) >= startOfDay && 
-        new Date(b.payment_date) <= endOfDay
-      );
+    if (error) {
+      console.error('Supabase error:', error);
+      throw error;
     }
 
     // 4. Calculate Revenue
@@ -92,8 +74,8 @@ export async function GET(request: Request) {
       })),
     };
 
-    if (finalBills && finalBills.length > 0) {
-      finalBills.forEach((bill) => {
+    if (bills && bills.length > 0) {
+      bills.forEach((bill) => {
         // Amounts in paise internally. Convert to INR for the API output.
         // Assuming DB stores paise: e.g., 15000 for 150 INR.
         const amountInPaise = Number(bill.total_amount);

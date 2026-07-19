@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { store } from '@/lib/store';
+import { supabase } from '@/lib/supabase';
 import { GoogleGenAI, Type } from '@google/genai';
 
 const apiKey = process.env.GEMINI_API_KEY;
@@ -18,8 +18,17 @@ export async function GET() {
       });
     }
 
-    const availableItems = store.items.filter(item => item.is_available);
-    const menuContext = availableItems.map(item => `- ID: ${item.id}, Name: ${item.name}, Category ID: ${item.category_id}, Type: ${item.veg_nonveg_tag}, Description: ${item.description}`).join('\n');
+    const { data: availableItems, error } = await supabase
+      .from('menu_items')
+      .select('*')
+      .eq('is_available', true);
+
+    if (error) {
+      console.error('Supabase error fetching menu items for suggest:', error);
+      throw error;
+    }
+
+    const menuContext = (availableItems || []).map(item => `- ID: ${item.id}, Name: ${item.name}, Category ID: ${item.category_id}, Type: ${item.veg_nonveg_tag}, Description: ${item.description}`).join('\n');
 
     const systemPrompt = `You are an expert culinary curator for a premium restaurant. 
 Your task is to analyze our menu and map EVERY SINGLE ITEM to its ideal cross-sell pairing (another item from the menu).

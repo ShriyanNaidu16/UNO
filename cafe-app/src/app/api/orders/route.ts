@@ -1,54 +1,126 @@
 import { NextResponse } from 'next/server';
-import { store } from '@/lib/store';
-import { Order, OrderItem } from '@/lib/types';
+export const dynamic = 'force-dynamic';
+import { supabase } from '@/lib/supabase';
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const tableId = searchParams.get('table');
+  try {
+    const { searchParams } = new URL(request.url);
+    const tableId = searchParams.get('table');
 
-  if (tableId) {
-    // Return orders for specific table
-    const tableOrders = store.orders.filter(o => o.table_id === tableId);
-    return NextResponse.json({ orders: tableOrders });
+    let query = supabase
+      .from('orders')
+      .select(`
+        *,
+        tables(table_number),
+        order_items(
+          *,
+          menu_items(name, name_te, name_hi, name_kn)
+        )
+      `)
+      .order('created_at', { ascending: false });
+
+    if (tableId) {
+      query = query.eq('table_id', tableId);
+    }
+
+    const { data: orders, error } = await query;
+    if (error) throw error;
+
+    // Transform response to match frontend expectations
+    const formattedOrders = orders?.map(order => ({
+      ...order,
+      table_number: order.tables?.table_number || 12, // fallback
+      items: order.order_items?.map((item: any) => ({
+        ...item,
+        menu_item_name: item.menu_items?.name,
+        menu_item_name_te: item.menu_items?.name_te,
+        menu_item_name_hi: item.menu_items?.name_hi,
+        menu_item_name_kn: item.menu_items?.name_kn,
+      }))
+    })) || [];
+
+    return NextResponse.json({ orders: formattedOrders });
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });
   }
-
-  // Return all active orders (for kitchen)
-  return NextResponse.json({ orders: store.orders });
 }
 
 export async function POST(request: Request) {
-  const { tableId, tableNumber, items, customerName } = await request.json();
+  try {
+    const { tableId, tableNumber, items, customerName } = await request.json();
 
-  const newOrderId = `o${Date.now()}`;
-  
-  // Find current round
-  const existingOrders = store.orders.filter(o => o.table_id === tableId && o.status !== 'closed');
-  const nextRound = existingOrders.length > 0 ? existingOrders[existingOrders.length - 1].round_number + 1 : 1;
+    // Find current round
+    const { data: existingOrders, error: roundError } = await supabase
+      .from('orders')
+      .select('round_number')
+      .eq('table_id', tableId)
+      .neq('status', 'closed')
+      .order('round_number', { ascending: false })
+      .limit(1);
 
-  const newOrder: Order & { table_number: number, items: (OrderItem & { menu_item_name: string })[] } = {
-    id: newOrderId,
-    table_id: tableId,
-    table_number: tableNumber || 12,
-    customer_name: customerName || null,
-    status: 'placed',
-    round_number: nextRound,
-    created_at: new Date().toISOString(),
-    items: items.map((i: any, index: number) => ({
-      id: `oi${Date.now()}${index}`,
-      order_id: newOrderId,
+    const nextRound = existingOrders && existingOrders.length > 0 ? existingOrders[0].round_number + 1 : 1;
+
+    // Insert Order
+    const { data: newOrder, error: orderError } = await supabase
+      .from('orders')
+      .insert({
+        table_id: tableId,
+        customer_name: customerName || null,
+        status: 'placed',
+        round_number: nextRound,
+      })
+      .select()
+      .single();
+
+    if (orderError) throw orderError;
+
+    // Insert Order Items
+    const orderItemsToInsert = items.map((i: any) => ({
+      order_id: newOrder.id,
       menu_item_id: i.item.id,
-      menu_item_name: i.item.name,
-      menu_item_name_te: i.item.name_te,
-      menu_item_name_hi: i.item.name_hi,
-      menu_item_name_kn: i.item.name_kn,
       quantity: i.quantity,
       price_at_order_time: i.item.price,
-      special_instructions: null,
-      created_at: new Date().toISOString()
-    }))
-  };
+      special_instructions: null
+    }));
 
-  store.orders.push(newOrder);
+    const { error: itemsError } = await supabase
+      .from('order_items')
+      .insert(orderItemsToInsert);
 
-  return NextResponse.json({ success: true, order: newOrder });
+    if (itemsError) throw itemsError;
+
+    // Fetch the complete order to return
+    const { data: completeOrder, error: fetchError } = await supabase
+      .from('orders')
+      .select(`
+        *,
+        tables(table_number),
+        order_items(
+          *,
+          menu_items(name, name_te, name_hi, name_kn)
+        )
+      `)
+      .eq('id', newOrder.id)
+      .single();
+
+    if (fetchError) throw fetchError;
+
+    const formattedOrder = {
+      ...completeOrder,
+      table_number: completeOrder.tables?.table_number || tableNumber || 12,
+      items: completeOrder.order_items?.map((item: any) => ({
+        ...item,
+        menu_item_name: item.menu_items?.name,
+        menu_item_name_te: item.menu_items?.name_te,
+        menu_item_name_hi: item.menu_items?.name_hi,
+        menu_item_name_kn: item.menu_items?.name_kn,
+      }))
+    };
+
+    return NextResponse.json({ success: true, order: formattedOrder });
+  } catch (error) {
+    console.error('Error creating order:', error);
+    return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
+  }
 }

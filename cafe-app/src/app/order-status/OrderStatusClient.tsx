@@ -25,19 +25,34 @@ export default function OrderStatusClient() {
   const [orders, setOrders] = useState<StatusOrder[]>([]);
   
   useEffect(() => {
+    let abortController = new AbortController();
+    
     const fetchOrders = async () => {
       if (!tableId) return;
       try {
-        const res = await fetch(`/api/orders?table=${tableId}`);
+        const res = await fetch(`/api/orders?table=${tableId}`, { 
+          signal: abortController.signal,
+          cache: 'no-store'
+        });
         const data = await res.json();
         setOrders(data.orders);
-      } catch (err) {
-        console.error("Failed to fetch orders");
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          console.error("Failed to fetch orders");
+        }
       }
     };
     fetchOrders();
-    const interval = setInterval(fetchOrders, 2000);
-    return () => clearInterval(interval);
+    const interval = setInterval(() => {
+      abortController.abort();
+      abortController = new AbortController();
+      fetchOrders();
+    }, 2000);
+    
+    return () => {
+      abortController.abort();
+      clearInterval(interval);
+    };
   }, [tableId]);
 
 

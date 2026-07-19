@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { store } from '@/lib/store';
+import { supabase } from '@/lib/supabase';
 
 export async function POST(request: Request) {
   try {
@@ -10,30 +10,34 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const newBill = {
-      id: `bill-${Date.now()}`,
-      table_id: tableId,
-      subtotal,
-      gst_amount,
-      service_charge_amount,
-      total_amount,
-      razorpay_order_id: null,
-      razorpay_payment_id: null,
-      payment_status: 'paid' as const,
-      payment_method: payment_method as 'upi' | 'card' | 'cash',
-      payment_date: new Date().toISOString(),
-      created_at: new Date().toISOString()
-    };
+    const { data: newBill, error: billError } = await supabase
+      .from('bills')
+      .insert({
+        table_id: tableId,
+        subtotal,
+        gst_amount,
+        service_charge_amount,
+        total_amount,
+        razorpay_order_id: null,
+        razorpay_payment_id: null,
+        payment_status: 'paid',
+        payment_method: payment_method as 'upi' | 'card' | 'cash',
+        payment_date: new Date().toISOString(),
+      })
+      .select()
+      .single();
 
-    store.bills.push(newBill);
+    if (billError) throw billError;
 
     // Mark active orders for this table as paid
-    store.orders = store.orders.map(order => {
-      if (order.table_id === tableId && order.status !== 'closed' && order.status !== 'paid') {
-        return { ...order, status: 'paid' };
-      }
-      return order;
-    });
+    const { error: orderError } = await supabase
+      .from('orders')
+      .update({ status: 'paid' })
+      .eq('table_id', tableId)
+      .neq('status', 'closed')
+      .neq('status', 'paid');
+
+    if (orderError) throw orderError;
 
     return NextResponse.json({ success: true, bill: newBill });
   } catch (error) {
