@@ -90,11 +90,11 @@ export default function OrderStatusClient() {
           </button>
         </div>
 
-        {orders.filter(o => o.status !== 'paid' && o.status !== 'closed').length === 0 ? (
+        {(orders || []).filter(o => o.status !== 'paid' && o.status !== 'closed').length === 0 ? (
           <p className="text-center text-foreground/60">{t('No active orders found.')}</p>
         ) : (
           <div className="space-y-4">
-            {orders.filter(o => o.status !== 'paid' && o.status !== 'closed').map(order => {
+            {(orders || []).filter(o => o.status !== 'paid' && o.status !== 'closed').map(order => {
               const display = getStatusDisplay(order.status);
               return (
                 <div key={order.id} className={`p-6 rounded-2xl shadow-sm border flex items-center gap-4 ${display.bg}`}>
